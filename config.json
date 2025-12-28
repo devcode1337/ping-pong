@@ -1,0 +1,107 @@
+{
+  "game": {
+    "width": 800,
+    "height": 600,
+    "fps": 60,
+    "title": "Пінг-Понг"
+  },
+  "server": {
+    "host": "localhost",
+    "port": 8080,
+    "timeout": 5
+  },
+  "audio": {
+    "enabled": true,
+    "volume": 0.8,
+    "sample_rate": 22050
+  },
+  "ui": {
+    "default_font_size": 36,
+    "title_font_size": 80,
+    "small_font_size": 24
+  },
+  "balls": [
+    {
+      "id": "ball_white",
+      "name": "Білий м'яч",
+      "file": "ball_white.png",
+      "color": [255, 255, 255],
+      "price": 0,
+      "unlocked": true
+    },
+    {
+      "id": "ball_red",
+      "name": "Червоний м'яч",
+      "file": "ball_red.png",
+      "color": [255, 50, 50],
+      "price": 100,
+      "unlocked": false
+    },
+    {
+      "id": "ball_blue",
+      "name": "Синій м'яч",
+      "file": "ball_blue.png",
+      "color": [50, 100, 255],
+      "price": 100,
+      "unlocked": false
+    },
+    {
+      "id": "ball_gold",
+      "name": "Золотий м'яч",
+      "file": "ball_gold.png",
+      "color": [255, 200, 0],
+      "price": 200,
+      "unlocked": false
+    },
+    {
+      "id": "ball_green",
+      "name": "Зелений м'яч",
+      "file": "ball_green.png",
+      "color": [50, 255, 50],
+      "price": 100,
+      "unlocked": false
+    }
+  ],
+  "paddles": [
+    {
+      "id": "paddle_magenta",
+      "name": "Магента платформа",
+      "file": "paddle_magenta.png",
+      "color": [255, 0, 255],
+      "price": 0,
+      "unlocked": true
+    },
+    {
+      "id": "paddle_green",
+      "name": "Зелена платформа",
+      "file": "paddle_green.png",
+      "color": [0, 255, 0],
+      "price": 100,
+      "unlocked": false
+    },
+    {
+      "id": "paddle_blue",
+      "name": "Синя платформа",
+      "file": "paddle_blue.png",
+      "color": [0, 150, 255],
+      "price": 100,
+      "unlocked": false
+    },
+    {
+      "id": "paddle_gold",
+      "name": "Золота платформа",
+      "file": "paddle_gold.png",
+      "color": [255, 200, 0],
+      "price": 200,
+      "unlocked": false
+    },
+    {
+      "id": "paddle_neon",
+      "name": "Неон платформа",
+      "file": "paddle_neon.png",
+      "color": [0, 255, 200],
+      "price": 300,
+      "unlocked": false
+    }
+  ]
+}
