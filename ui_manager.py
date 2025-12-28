@@ -165,20 +165,18 @@ class SkinShop:
     def _create_buttons(self):
         """Створити кнопки магазину"""
         buttons = {
-            "balls_tab": Button(50, 80, 150, 50, "М'ячі", (100, 150, 200)),
-            "paddles_tab": Button(250, 80, 150, 50, "Платформи", (100, 150, 200)),
-            "back": Button(650, 20, 120, 40, "Назад", (150, 100, 100)),
+            "balls_tab": Button(50, 80, 140, 45, "М'ячі", (100, 150, 200)),
+            "paddles_tab": Button(220, 80, 140, 45, "Платформи", (100, 150, 200)),
+            "back": Button(self.screen_width - 150, 20, 130, 45, "Назад", (150, 100, 100)),
         }
         
-        # Кнопки для скінів
-        skins = self.resource_manager.get_skin_data("balls")
-        for i, skin in enumerate(skins):
-            buttons[f"skin_{skin['id']}"] = Button(
-                50 + (i % 3) * 200,
-                200 + (i // 3) * 150,
-                180, 130,
-                "", (80, 80, 100)
-            )
+        # Кнопки для скінів (по 3 в ряд)
+        for skin_type in ["balls", "paddles"]:
+            skins = self.resource_manager.get_skin_data(skin_type)
+            for i, skin in enumerate(skins):
+                x = 50 + (i % 3) * 220  # 3 скіни в ряд
+                y = 160 + (i // 3) * 160  # Рядки
+                buttons[f"skin_{skin['id']}"] = Button(x, y, 180, 120, "", (80, 80, 100))
         
         return buttons
     
@@ -186,14 +184,17 @@ class SkinShop:
         """Обробити подію"""
         for button_name, button in self.buttons.items():
             if button.handle_event(event):
-                self._handle_button_click(button_name)
+                return self._handle_button_click(button_name)
+        return None
     
     def _handle_button_click(self, button_name: str):
         """Обробити клік на кнопку"""
         if button_name == "balls_tab":
             self.current_tab = "balls"
+            return None
         elif button_name == "paddles_tab":
             self.current_tab = "paddles"
+            return None
         elif button_name == "back":
             return "MENU"  # Повернутися до меню
         # Обробити клік на скін

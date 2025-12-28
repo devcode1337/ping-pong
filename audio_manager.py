@@ -1,74 +1,15 @@
 """
-Модуль для управління звуками
-Генерує та відтворює звукові ефекти
+Модуль для управління звуками та музикою
+Завантажує звукові файли та музику з папки assets/sounds
 """
 
 import pygame
-import numpy as np
 from pathlib import Path
 from typing import Optional
 
-class SoundGenerator:
-    """Генератор звукових ефектів"""
-    
-    @staticmethod
-    def generate_beep(frequency=440, duration=100, sample_rate=22050):
-        """
-        Генерувати звуковий сигнал (биття)
-        
-        Args:
-            frequency: Частота в Гц
-            duration: Тривалість в мс
-            sample_rate: Частота дискретизації
-        """
-        frames = int(sample_rate * duration / 1000)
-        arr = np.sin(2.0 * np.pi * frequency * np.linspace(0, duration/1000, frames))
-        
-        # Додати огинаючу (ADSR)
-        attack = int(frames * 0.05)
-        decay = int(frames * 0.1)
-        sustain = frames - attack - decay - int(frames * 0.2)
-        release = int(frames * 0.2)
-        
-        envelope = np.concatenate([
-            np.linspace(0, 1, attack),
-            np.linspace(1, 0.7, decay),
-            np.ones(sustain) * 0.7,
-            np.linspace(0.7, 0, release)
-        ])
-        
-        arr = arr * envelope
-        arr = (arr * 32767).astype(np.int16)
-        arr = np.repeat(arr[:, np.newaxis], 2, axis=1)
-        
-        return pygame.sndarray.make_sound(arr)
-    
-    @staticmethod
-    def generate_platform_hit():
-        """Звук удару м'яча об платформу"""
-        return SoundGenerator.generate_beep(frequency=800, duration=80)
-    
-    @staticmethod
-    def generate_wall_hit():
-        """Звук удару м'яча об стіну"""
-        return SoundGenerator.generate_beep(frequency=600, duration=60)
-    
-    @staticmethod
-    def generate_score():
-        """Звук набрання очка"""
-        # Дві ноти
-        sound1 = SoundGenerator.generate_beep(frequency=1000, duration=100)
-        sound2 = SoundGenerator.generate_beep(frequency=1200, duration=100)
-        return sound1  # Спрощено, використовуємо звичайний биток
-    
-    @staticmethod
-    def generate_menu_click():
-        """Звук клік на кнопку"""
-        return SoundGenerator.generate_beep(frequency=700, duration=50)
-
 
 class AudioManager:
-    """Менеджер для управління звуками"""
+    """Менеджер для управління звуками та музикою"""
     
     def __init__(self, enabled: bool = True):
         self.enabled = enabled
@@ -79,45 +20,110 @@ class AudioManager:
         # Ініціалізувати pygame.mixer
         pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
         
-        # Загенерувати звуки
-        self._generate_sounds()
+        # Завантажити звуки
+        self._load_sounds()
     
-    def _generate_sounds(self):
-        """Загенерувати всі звукові ефекти"""
-        print("🔊 Генерування звукових ефектів...")
+    def _load_sounds(self):
+        """Завантажити всі звукові ефекти та музику"""
+        sounds_dir = Path(__file__).parent / "assets" / "sounds"
         
-        try:
-            self.sounds['platform_hit'] = SoundGenerator.generate_platform_hit()
-            self.sounds['wall_hit'] = SoundGenerator.generate_wall_hit()
-            self.sounds['score'] = SoundGenerator.generate_score()
-            self.sounds['menu_click'] = SoundGenerator.generate_menu_click()
-            
-            print("✓ Звукові ефекти готові")
-        except Exception as e:
-            print(f"❌ Помилка при генеруванні звуків: {e}")
-            self.enabled = False
+        print("🔊 Завантаження звуків...")
+        
+        # Звукові ефекти (WAV формат для швидкої відповіді)
+        sound_files = {
+            'platform_hit': 'paddle_hit.wav',
+            'wall_hit': 'wall_hit.wav',
+            'score': 'score.wav',
+            'menu_click': 'menu_click.wav',
+        }
+        
+        for sound_key, filename in sound_files.items():
+            filepath = sounds_dir / filename
+            if filepath.exists():
+                try:
+                    self.sounds[sound_key] = pygame.mixer.Sound(str(filepath))
+                    print(f"  ✓ {sound_key} завантажено")
+                except Exception as e:
+                    print(f"  ❌ Помилка при завантаженні {filename}: {e}")
+                    self.sounds[sound_key] = None
+            else:
+                print(f"  ⚠️  {filename} не знайдено")
+                self.sounds[sound_key] = None
+        
+        # Фонова музика - спробуємо WAV або MP3
+        for music_file in ['background_music.wav', 'background_music.mp3']:
+            self.music_path = sounds_dir / music_file
+            if self.music_path.exists():
+                print(f"  ✓ {music_file} знайдено")
+                return
+        
+        print(f"  ⚠️  background_music не знайдено")
+        self.music_path = None
     
-    def play_sound(self, sound_name: str):
-        """Відтворити звуковий ефект"""
-        if not self.enabled or sound_name not in self.sounds:
+    def play_sound(self, sound_key: str):
+        """
+        Відтворити звуковий ефект
+        
+        Args:
+            sound_key: Ключ звуку ('platform_hit', 'wall_hit', 'score', 'menu_click')
+        """
+        if not self.enabled:
+            return
+        
+        if sound_key in self.sounds and self.sounds[sound_key] is not None:
+            try:
+                self.sounds[sound_key].set_volume(self.volume)
+                self.sounds[sound_key].play()
+            except Exception as e:
+                print(f"Помилка при відтворенні звуку {sound_key}: {e}")
+    
+    def play_music(self, loop: bool = True):
+        """
+        Відтворити фонову музику
+        
+        Args:
+            loop: Повторювати музику нескінченно
+        """
+        if not self.enabled or not hasattr(self, 'music_path') or not self.music_path:
+            return
+        
+        if not self.music_path.exists():
+            print(f"Музика не знайдена: {self.music_path}")
             return
         
         try:
-            self.sounds[sound_name].set_volume(self.volume)
-            self.sounds[sound_name].play()
+            pygame.mixer.music.load(str(self.music_path))
+            pygame.mixer.music.play(-1 if loop else 0)
+            pygame.mixer.music.set_volume(self.volume * 0.5)  # Музика тихіша за ефекти
+            print(f"🎵 Фонова музика запущена: {self.music_path.name}")
         except Exception as e:
-            print(f"❌ Помилка при відтворенні звуку {sound_name}: {e}")
+            print(f"Помилка при завантаженні музики: {e}")
+    
+    def stop_music(self):
+        """Зупинити фонову музику"""
+        try:
+            pygame.mixer.music.stop()
+        except Exception as e:
+            print(f"Помилка при зупинці музики: {e}")
     
     def set_volume(self, volume: float):
-        """Встановити гучність (0.0 - 1.0)"""
-        self.volume = max(0.0, min(1.0, volume))
-        pygame.mixer.music.set_volume(self.volume)
+        """
+        Встановити гучність
+        
+        Args:
+            volume: Гучність від 0 до 1
+        """
+        self.volume = max(0, min(1, volume))
+        try:
+            pygame.mixer.music.set_volume(self.volume * 0.5)
+        except:
+            pass
     
-    def stop_sound(self, sound_name: str):
-        """Зупинити звук"""
-        if sound_name in self.sounds:
-            self.sounds[sound_name].stop()
-    
-    def stop_all(self):
-        """Зупинити всі звуки"""
-        pygame.mixer.stop()
+    def toggle_mute(self):
+        """Вмикнути/вимкнути звук"""
+        self.enabled = not self.enabled
+        if not self.enabled:
+            self.stop_music()
+        else:
+            if hasattr(self, 'music_path') and self.music_path.exists():
+                self.play_music()

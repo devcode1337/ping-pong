@@ -185,7 +185,7 @@ def draw_waiting_screen(screen):
     else:
         screen.fill((20, 20, 40))
     
-    waiting_text = font_main.render("⏳ Очікування гравців...", True, (200, 200, 255))
+    waiting_text = font_main.render("Очікування гравців...", True, (200, 200, 255))
     screen.blit(waiting_text, (WIDTH // 2 - waiting_text.get_width() // 2, HEIGHT // 2))
     
     # Анімована точка
@@ -198,6 +198,9 @@ def draw_waiting_screen(screen):
 game_menu = GameMenu(resource_manager, WIDTH, HEIGHT)
 player_settings = PlayerSettings(resource_manager, WIDTH, HEIGHT)
 skin_shop = SkinShop(resource_manager, WIDTH, HEIGHT)
+
+# Запустити музику в меню
+audio_manager.play_music(loop=True)
 
 # --- ГОЛОВНА ГРА ЦИКЛ ---
 def main_loop():
@@ -263,8 +266,9 @@ def main_loop():
                 action = local_skin_shop.handle_event(e)
                 if action == "MENU":
                     current_screen = "MENU"
-                    selected_ball_skin = local_skin_shop.selected_ball.replace("ball_", "")
-                    selected_paddle_skin = local_skin_shop.selected_paddle.replace("paddle_", "")
+                    # selected_ball вже має формат "ball_white", потрібно очистити
+                    selected_ball_skin = local_skin_shop.selected_ball.split("_", 1)[1] if "_" in local_skin_shop.selected_ball else local_skin_shop.selected_ball
+                    selected_paddle_skin = local_skin_shop.selected_paddle.split("_", 1)[1] if "_" in local_skin_shop.selected_paddle else local_skin_shop.selected_paddle
                     audio_manager.play_sound("menu_click")
             
             elif current_screen == "GAME":
@@ -273,13 +277,14 @@ def main_loop():
                     you_winner = None
                     game_state.clear()
                     player_settings = PlayerSettings(resource_manager, WIDTH, HEIGHT)
-                
-                # Керування гравцем
-                if e.type == KEYDOWN:
-                    if e.key == K_w:
-                        client.send(b"UP")
-                    elif e.key == K_s:
-                        client.send(b"DOWN")
+        
+        # КЕРУВАННЯ ПЛАТФОРМОЮ (постійна перевірка натиснутих клавіш)
+        if current_screen == "GAME" and client:
+            keys = key.get_pressed()
+            if keys[K_w]:
+                client.send(b"UP")
+            elif keys[K_s]:
+                client.send(b"DOWN")
         
         # МАЛЮВАННЯ
         if current_screen == "MENU":
@@ -305,7 +310,7 @@ def main_loop():
         
         elif current_screen == "CONNECTING":
             screen.fill((0, 0, 0))
-            connecting_text = font_main.render("🔗 Підключення до сервера...", True, (255, 255, 255))
+            connecting_text = font_main.render("Підключення до сервера...", True, (255, 255, 255))
             screen.blit(connecting_text, (WIDTH // 2 - connecting_text.get_width() // 2, HEIGHT // 2))
         
         display.update()

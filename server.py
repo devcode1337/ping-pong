@@ -91,9 +91,11 @@ class GameServer:
 
                 if self.ball['x'] < 0:
                     self.scores[1] += 1
+                    self.sound_event = 'score'
                     self.reset_ball()
                 elif self.ball['x'] > WIDTH:
                     self.scores[0] += 1
+                    self.sound_event = 'score'
                     self.reset_ball()
 
                 if self.scores[0] >= 10:
